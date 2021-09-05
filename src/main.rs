@@ -1,10 +1,6 @@
 mod error;
 mod routes;
 
-#[cfg(all(target_env = "musl", target_pointer_width = "64"))]
-#[global_allocator]
-static GLOBAL: jemallocator::Jemalloc = jemallocator::Jemalloc;
-
 use actix_web::{middleware::Compress, web, App, HttpServer, Responder, HttpResponse};
 use tf_database::Database;
 
@@ -30,6 +26,7 @@ async fn main() -> std::io::Result<()> {
         App::new()
             .wrap(Compress::default())
             .app_data(web::Data::new(database.clone()))
+            .app_data(web::PayloadConfig::new(1024 * 1024 * 15))
             .route("/", web::route().to(index))
             .route("/favicon.ico", web::route().to(favicon))
             .service(actix_files::Files::new("/static", "static"))
